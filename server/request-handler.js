@@ -12,6 +12,10 @@ this file and include it in basic-server.js so that it actually works.
 
 **************************************************************/
 
+//array with results objects
+//[{results:[{username: 'Jono', message: ...}]}, ...]
+var messages = [];
+
 exports.requestHandler = function(request, response) {
   // Request and Response come from node's http module.
   //
@@ -37,7 +41,7 @@ var responseBody = {
   results: []
 };
 
-  console.log('url statusCode', statusCode);
+  // console.log('url statusCode', statusCode);
 
   // See the note below about CORS headers.
   var headers = defaultCorsHeaders;
@@ -53,30 +57,35 @@ var responseBody = {
   // which includes the status and all headers.
   response.writeHead(statusCode, headers);
 
-//how to read data
-//data will not be complete
-//how do we handle data from client?
-// && request.url === '/classes/messages'
+console.log('method type:', request.method);
+//check the request.method, default to "GET"
+//check the request.url, default to 404
+//in GET request, if messages is empty, send back empty object (we're sending undefined)
   if(request.method === 'POST' && request.url === '/classes/messages'){
     statusCode = 201;
+    response.writeHead(statusCode, headers);
     request.on('data', function(chunk){
-      responseBody.results.push(chunk);
-      console.log('results array: ', responseBody.results);
-      console.log("data received: ", JSON.parse(chunk.toString()));
+      var resultsObj = JSON.parse(chunk.toString());
+      resultsObj.url = request.url;
+      responseBody.results.push(resultsObj);
+      messages.push(responseBody);
     }).on('end', function(){
-      responseBody.results = Buffer.concat(responseBody.results).toString();
-      console.log("results after end: ",responseBody.results);
-      console.log('responseBody done');
       response.end(JSON.stringify(responseBody));
-      // response.end();
     });
-  }
-else {
-  console.log('else responseBody done');
-  response.end(JSON.stringify(responseBody));
-  // response.end();
+  }else if((request.method === 'GET') && request.url === '/classes/messages'){
+    response.writeHead(statusCode, headers);
+    if(messages.length === 0){
+      response.end(JSON.stringify(responseBody));
+    }else{
+      response.end(JSON.stringify(messages[0]));
+    }
+  }else {
+    statusCode = 404;
+    response.writeHead(statusCode, headers);
+    response.end(JSON.stringify(responseBody));
   
 }
+
 
   // Make sure to always call response.end() - Node may not send
   // anything back to the client until you do. The string you pass to
