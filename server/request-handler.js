@@ -29,8 +29,15 @@ exports.requestHandler = function(request, response) {
   // console.logs in your code.
   console.log("Serving request type " + request.method + " for url " + request.url);
 
+
+// console.log('request keys', Object.keys(request));
   // The outgoing status.
-  var statusCode = 200;
+var statusCode = 200;
+var responseBody = {
+  results: []
+};
+
+  console.log('url statusCode', statusCode);
 
   // See the note below about CORS headers.
   var headers = defaultCorsHeaders;
@@ -41,16 +48,36 @@ exports.requestHandler = function(request, response) {
   // other than plain text, like JSON or HTML.
   headers['Content-Type'] = "application/JSON";
 
+
   // .writeHead() writes to the request line and headers of the response,
   // which includes the status and all headers.
   response.writeHead(statusCode, headers);
 
+//how to read data
+//data will not be complete
+//how do we handle data from client?
+// && request.url === '/classes/messages'
+  if(request.method === 'POST' && request.url === '/classes/messages'){
+    statusCode = 201;
+    request.on('data', function(chunk){
+      responseBody.results.push(chunk);
+      console.log('results array: ', responseBody.results);
+      console.log("data received: ", JSON.parse(chunk.toString()));
+    }).on('end', function(){
+      responseBody.results = Buffer.concat(responseBody.results).toString();
+      console.log("results after end: ",responseBody.results);
+      console.log('responseBody done');
+      response.end(JSON.stringify(responseBody));
+      // response.end();
+    });
+  }
+else {
+  console.log('else responseBody done');
+  response.end(JSON.stringify(responseBody));
+  // response.end();
+  
+}
 
-  var responseBody = {
-    results: []
-  };
-
-  response.write(JSON.stringify(responseBody));
   // Make sure to always call response.end() - Node may not send
   // anything back to the client until you do. The string you pass to
   // response.end() will be the body of the response - i.e. what shows
@@ -60,7 +87,6 @@ exports.requestHandler = function(request, response) {
   // node to actually send all the data over to the client.
 
   //data is the object we return, should be in JSON
-  response.end();
 
 };
 
