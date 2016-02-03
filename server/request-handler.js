@@ -61,7 +61,7 @@ console.log('method type:', request.method);
 //check the request.method, default to "GET"
 //check the request.url, default to 404
 //in GET request, if messages is empty, send back empty object (we're sending undefined)
-  if(request.method === 'POST' && request.url === '/classes/messages'){
+  if(request.method === 'POST' && (request.url === '/classes/messages' || request.url === '/classes/room1')){
     statusCode = 201;
     response.writeHead(statusCode, headers);
     request.on('data', function(chunk){
@@ -69,15 +69,16 @@ console.log('method type:', request.method);
       resultsObj.url = request.url;
       responseBody.results.push(resultsObj);
       messages.push(responseBody);
-    }).on('end', function(){
+    });
+    request.on('end', function(){
       response.end(JSON.stringify(responseBody));
     });
-  }else if((request.method === 'GET') && request.url === '/classes/messages'){
+  }else if((request.method === 'GET') && (request.url === '/classes/messages'|| request.url === '/classes/room1')){
     response.writeHead(statusCode, headers);
     if(messages.length === 0){
       response.end(JSON.stringify(responseBody));
     }else{
-      response.end(JSON.stringify(messages[0]));
+      response.end(JSON.stringify(messages[messages.length - 1]));
     }
   }else {
     statusCode = 404;
