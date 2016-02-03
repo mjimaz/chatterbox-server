@@ -62,7 +62,9 @@ var app = {
       // data: { order: '-createdAt'},
       success: function(data) {
         // Don't bother if we have nothing to work with
+        data = JSON.parse(data);
         if (!data.results || !data.results.length) { return; }
+        console.log("data received!", data);
 
         // Get the last message
         var mostRecentMessage = data.results[data.results.length-1];

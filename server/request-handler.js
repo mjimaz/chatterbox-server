@@ -14,7 +14,10 @@ this file and include it in basic-server.js so that it actually works.
 
 //array with results objects
 //[{results:[{username: 'Jono', message: ...}]}, ...]
-var messages = [];
+var messages = {"results" : [{
+      username: 'Jono',
+      text: 'Do my bidding!'
+    }]};
 
 exports.requestHandler = function(request, response) {
   // Request and Response come from node's http module.
@@ -68,19 +71,19 @@ console.log('method type:', request.method);
       var resultsObj = JSON.parse(chunk.toString());
       resultsObj.url = request.url;
       responseBody.results.push(resultsObj);
-      messages.push(responseBody);
+      messages.results.push(responseBody.results[responseBody.results.length-1]);
     });
     request.on('end', function(){
       response.end(JSON.stringify(responseBody));
     });
-  }else if((request.method === 'GET') && (request.url === '/classes/messages'|| request.url === '/classes/room1')){
+  }else if((request.method === 'GET' || request.method === 'OPTIONS') && (request.url === '/classes/messages'|| request.url === '/classes/room1')){
     response.writeHead(statusCode, headers);
     if(messages.length === 0){
       response.end(JSON.stringify(responseBody));
     }else{
-      response.end(JSON.stringify(messages[messages.length - 1]));
+      response.end(JSON.stringify(messages));
     }
-  }else {
+  } else {
     statusCode = 404;
     response.writeHead(statusCode, headers);
     response.end(JSON.stringify(responseBody));
